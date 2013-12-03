@@ -152,9 +152,10 @@ class SkuldVimAdaptor(object):
 
 
 def __filter_task_lines__(lines):
-    for idx, l in enumerate(lines[:]):
-        if l.strip().startswith('#'):
-            del lines[idx]
+    for l in lines[:]:
+        sl = l.strip()
+        if sl.startswith('#') or len(sl) == 0:
+            lines.remove(l)
     return lines
 
 
