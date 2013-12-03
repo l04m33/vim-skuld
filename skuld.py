@@ -156,7 +156,7 @@ def __filter_task_lines__(lines):
         sl = l.strip()
         if sl.startswith('#') or len(sl) == 0:
             lines.remove(l)
-    return lines
+    return [ll.strip() for ll in lines]
 
 
 def __search_vim_tab__(t, name):
