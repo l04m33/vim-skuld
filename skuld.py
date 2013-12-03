@@ -7,7 +7,7 @@ License:    MIT (http://l04m33.mit-license.org)
 """
 
 from __future__ import print_function
-#import vim
+import vim
 import threading
 import collections
 
@@ -110,6 +110,71 @@ class Skuld(threading.Thread):
         self._ret_q.put(self._tasks)
 
 
+class SkuldVimAdaptor(object):
+
+    """The Bridge between Skuld and Vim."""
+
+    def __init__(self, skuld_obj=None):
+        if skuld_obj is None:
+            skuld_obj = Skuld()
+            skuld_obj.setDaemon(True)
+            skuld_obj.start()
+        self._skuld = skuld_obj
+
+    def set_current_range_as_tasks(self):
+        """Set the current range as tasks."""
+        tasks = __filter_task_lines__(vim.current.range[:])
+        if len(tasks) > 0:
+            self._skuld.cmd(SkuldCmd(name='set_tasks',
+                                     args=tasks,
+                                     block=False))
+
+    def set_current_buff_as_tasks(self):
+        """Set the contents of current buffer as tasks."""
+        tasks = __filter_task_lines__(vim.current.buffer[:])
+        if len(tasks) > 0:
+            self._skuld.cmd(SkuldCmd(name='set_tasks',
+                                     args=tasks,
+                                     block=False))
+
+    def display_tasks(self):
+        """Display the tasks in a new window. Return nothing."""
+        tasks = self._skuld.cmd(SkuldCmd(name='get_tasks',
+                                         args=[],
+                                         block=True))
+        skuld_tab, skuld_window = __find_vim_window__('[Skuld Tasks]')
+        if skuld_window is None:
+            vim.command('tabedit [Skuld Tasks]')
+        else:
+            vim.current.tabpage = skuld_tab
+            vim.current.window = skuld_window
+        vim.current.window.buffer[:] = tasks
+
+
+def __filter_task_lines__(lines):
+    for idx, l in enumerate(lines[:]):
+        if l.strip().startswith('#'):
+            del lines[idx]
+    return lines
+
+
+def __search_vim_tab__(t, name):
+    for w in t.windows:
+        if w.valid and w.buffer.name.endswith(name):
+            return w
+    return None
+
+
+def __find_vim_window__(name):
+    for t in vim.tabpages:
+        if t.valid:
+            w = __search_vim_tab__(t, name)
+            if w is not None:
+                return (t, w)
+
+    return (None, None)
+
+
 def __check_arg_type__(obj, cls, ctor):
     if not isinstance(obj, cls):
         if obj is None:
@@ -120,8 +185,4 @@ def __check_arg_type__(obj, cls, ctor):
 
 
 if __name__ == '__main__':
-    s = Skuld()
-    s.setDaemon(True)
-    s.start()
-    import code
-    code.interact(local=locals())
+    s = SkuldVimAdaptor()
