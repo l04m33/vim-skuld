@@ -10,6 +10,8 @@ from __future__ import print_function
 import vim
 import threading
 import collections
+import time
+import sys
 
 try:
     import queue
@@ -59,7 +61,15 @@ class Skuld(threading.Thread):
         self._cmd_q = cmd_queue
         self._ret_q = ret_queue
         self._quit_e = quit_event
+        self._work_period = 0.5
+        self._rest_period = 0.5
+        self._long_rest_period = 1
+        self._max_work_streak = 2
         self._tasks = []
+        self._cur_task = -1
+        self._cur_state_start_time = None
+        self._cur_state = self._state_idle
+        self._cur_work_streak = 0
 
     def run(self):
         """Main loop."""
@@ -68,6 +78,10 @@ class Skuld(threading.Thread):
             while cmd is not None:
                 self._handle_cmd(cmd)
                 cmd = self._recv_cmd()
+            next_state = self._cur_state()
+            if next_state != self._cur_state:
+                self._cur_state_start_time = time.time()
+                self._cur_state = next_state
 
     def cmd(self, cmd):
         """
@@ -101,13 +115,87 @@ class Skuld(threading.Thread):
         cmd_func(cmd)
 
     def _cmd_default(self, cmd):
-        print(self, cmd)
+        print(self, cmd, file=sys.stderr)
+
+    def _cmd_set_work_period(self, cmd):
+        self._work_period = cmd.args
+
+    def _cmd_set_rest_period(self, cmd):
+        self._rest_period = cmd.args
+
+    def _cmd_set_long_rest_period(self, cmd):
+        self._long_rest_period = cmd.args
 
     def _cmd_set_tasks(self, cmd):
         self._tasks = cmd.args
 
     def _cmd_get_tasks(self, cmd):
         self._ret_q.put(self._tasks)
+
+    def _cmd_start_timer(self, cmd):
+        if isinstance(cmd.args, int):
+            self._cur_task = cmd.args
+        else:
+            self._cur_task = 0
+        if self._cur_task >= 0 and self._cur_task < len(self._tasks):
+            print('_state_idle -> _state_working', file=sys.stderr)
+            self._cur_state_start_time = time.time()
+            self._cur_state = self._state_working
+
+    def _cmd_stop_timer(self, cmd):
+        print('_state_* -> _state_idle', file=sys.stderr)
+        self._cur_state_start_time = None
+        self._cur_state = self._state_idle
+        self._cur_work_streak = 0
+
+    def _state_idle(self):
+        return self._state_idle
+
+    def _state_working(self):
+        if self._cur_state_start_time is not None:
+            now = time.time()
+            diff_time = now - self._cur_state_start_time
+            if diff_time >= (self._work_period * 60):
+                # TODO: Trigger notification
+                self._cur_work_streak += 1
+                if self._cur_work_streak < self._max_work_streak:
+                    print('_state_working -> _state_resting', file=sys.stderr)
+                    return self._state_resting
+                else:
+                    self._cur_work_streak = 0
+                    print('_state_working -> _state_long_resting',
+                          file=sys.stderr)
+                    return self._state_long_resting
+            else:
+                return self._state_working
+        else:
+            return self._state_idle
+
+    def _state_resting(self):
+        if self._cur_state_start_time is not None:
+            now = time.time()
+            diff_time = now - self._cur_state_start_time
+            if diff_time >= (self._rest_period * 60):
+                # TODO: Trigger notification
+                print('_state_resting -> _state_working', file=sys.stderr)
+                return self._state_working
+            else:
+                return self._state_resting
+        else:
+            return self._state_idle
+
+    def _state_long_resting(self):
+        if self._cur_state_start_time is not None:
+            now = time.time()
+            diff_time = now - self._cur_state_start_time
+            if diff_time >= (self._long_rest_period * 60):
+                # TODO: Trigger notification
+                print('_state_long_resting -> _state_working', file=sys.stderr)
+                return self._state_working
+            else:
+                return self._state_long_resting
+        else:
+            return self._state_idle
 
 
 class SkuldVimAdaptor(object):
