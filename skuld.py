@@ -130,7 +130,7 @@ class SkuldVimAdaptor(object):
     #                             args=tasks,
     #                             block=False))
 
-    def set_current_buff_as_tasks(self):
+    def set_current_buf_as_tasks(self):
         """Set the contents of current buffer as tasks."""
         tasks = __filter_task_lines__(vim.current.buffer[:])
         self._skuld.cmd(SkuldCmd(name='set_tasks',
@@ -139,17 +139,27 @@ class SkuldVimAdaptor(object):
 
     def display_tasks(self):
         """Display the tasks in a new window. Return nothing."""
-        tasks = self._skuld.cmd(SkuldCmd(name='get_tasks',
-                                         args=[],
-                                         block=True))
         skuld_tab, skuld_window = __find_vim_window__(self.SKULD_BUFFER_NAME)
         if skuld_window is None:
             vim.command('tabedit ' + self.SKULD_BUFFER_NAME)
         else:
             vim.current.tabpage = skuld_tab
             vim.current.window = skuld_window
-        vim.current.window.buffer[:] = tasks
-        vim.command('call SkuldSetBufType()')
+        self.update_buf_content(vim.current.window.buffer)
+        vim.current.buffer.options['modified'] = False
+        vim.current.buffer.options['buftype'] = 'nofile'
+        vim.current.buffer.options['bufhidden'] = 'hide'
+        vim.current.buffer.options['swapfile'] = False
+        vim.command('call SkuldMapBufKeys()')
+
+    def update_buf_content(self, buf=None):
+        """Write tasks to a buffer."""
+        if buf is None:
+            buf = vim.current.buffer
+        tasks = self._skuld.cmd(SkuldCmd(name='get_tasks',
+                                         args=[],
+                                         block=True))
+        buf[:] = tasks
 
 
 def __filter_task_lines__(lines):

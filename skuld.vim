@@ -3,22 +3,19 @@ if exists("g:loaded_skuld") && g:loaded_skuld
 endif
 let g:loaded_skuld = 1
 
-pyfile skuld.py
+pyfile <sfile>:h/skuld.py
 
 command -nargs=0 SkuldBufOpen    :py skuld_adaptor.display_tasks()
-command -nargs=0 SkuldTaskUpdate :py skuld_adaptor.set_current_buff_as_tasks()
+command -nargs=0 SkuldBufUpdate  :py skuld_adaptor.update_buf_content()
+command -nargs=0 SkuldTaskUpdate :py skuld_adaptor.set_current_buf_as_tasks()
 
-noremap <leader>td :SkuldBufOpen<cr>
-
-function! SkuldSetBufType()
-    setlocal nomodified
-    setlocal buftype=nofile
-    setlocal bufhidden=hide
-    setlocal noswapfile
+function! SkuldMapBufKeys()
 endfunction
 
 augroup SkuldBufAu
     autocmd!
-    autocmd BufEnter             \[Skuld\ Tasks\] SkuldBufOpen
-    autocmd BufLeave,InsertLeave \[Skuld\ Tasks\] SkuldTaskUpdate
+    autocmd BufEnter    \[Skuld\ Tasks\] SkuldBufUpdate
+    autocmd BufLeave    \[Skuld\ Tasks\] SkuldTaskUpdate
+    autocmd InsertLeave \[Skuld\ Tasks\] SkuldTaskUpdate
+    autocmd InsertLeave \[Skuld\ Tasks\] SkuldBufUpdate
 augroup end
