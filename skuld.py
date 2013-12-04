@@ -224,8 +224,8 @@ class SkuldVimAdaptor(object):
             skuld_obj = Skuld()
             skuld_obj.setDaemon(True)
             skuld_obj.start()
-        skuld_obj.cmd(SkuldCmd(name='set_adaptor', args=self, block=False))
         self._skuld = skuld_obj
+        skuld_obj.cmd(SkuldCmd(name='set_adaptor', args=self, block=False))
 
     #def set_current_range_as_tasks(self):
     #    """Set the current range as tasks."""
