@@ -114,6 +114,8 @@ class SkuldVimAdaptor(object):
 
     """The Bridge between Skuld and Vim."""
 
+    SKULD_BUFFER_NAME = '[Skuld Tasks]'
+
     def __init__(self, skuld_obj=None):
         if skuld_obj is None:
             skuld_obj = Skuld()
@@ -121,34 +123,33 @@ class SkuldVimAdaptor(object):
             skuld_obj.start()
         self._skuld = skuld_obj
 
-    def set_current_range_as_tasks(self):
-        """Set the current range as tasks."""
-        tasks = __filter_task_lines__(vim.current.range[:])
-        if len(tasks) > 0:
-            self._skuld.cmd(SkuldCmd(name='set_tasks',
-                                     args=tasks,
-                                     block=False))
+    #def set_current_range_as_tasks(self):
+    #    """Set the current range as tasks."""
+    #    tasks = __filter_task_lines__(vim.current.range[:])
+    #    self._skuld.cmd(SkuldCmd(name='set_tasks',
+    #                             args=tasks,
+    #                             block=False))
 
     def set_current_buff_as_tasks(self):
         """Set the contents of current buffer as tasks."""
         tasks = __filter_task_lines__(vim.current.buffer[:])
-        if len(tasks) > 0:
-            self._skuld.cmd(SkuldCmd(name='set_tasks',
-                                     args=tasks,
-                                     block=False))
+        self._skuld.cmd(SkuldCmd(name='set_tasks',
+                                 args=tasks,
+                                 block=False))
 
     def display_tasks(self):
         """Display the tasks in a new window. Return nothing."""
         tasks = self._skuld.cmd(SkuldCmd(name='get_tasks',
                                          args=[],
                                          block=True))
-        skuld_tab, skuld_window = __find_vim_window__('[Skuld Tasks]')
+        skuld_tab, skuld_window = __find_vim_window__(self.SKULD_BUFFER_NAME)
         if skuld_window is None:
-            vim.command('tabedit [Skuld Tasks]')
+            vim.command('tabedit ' + self.SKULD_BUFFER_NAME)
         else:
             vim.current.tabpage = skuld_tab
             vim.current.window = skuld_window
         vim.current.window.buffer[:] = tasks
+        vim.command('call SkuldSetBufType()')
 
 
 def __filter_task_lines__(lines):
@@ -186,4 +187,4 @@ def __check_arg_type__(obj, cls, ctor):
 
 
 if __name__ == '__main__':
-    s = SkuldVimAdaptor()
+    skuld_adaptor = SkuldVimAdaptor()
