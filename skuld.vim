@@ -19,6 +19,6 @@ endfunction
 
 augroup SkuldBufAu
     autocmd!
-    autocmd BufEnter \[Skuld\ Tasks\] SkuldBufOpen
-    autocmd BufLeave \[Skuld\ Tasks\] SkuldTaskUpdate
+    autocmd BufEnter             \[Skuld\ Tasks\] SkuldBufOpen
+    autocmd BufLeave,InsertLeave \[Skuld\ Tasks\] SkuldTaskUpdate
 augroup end
