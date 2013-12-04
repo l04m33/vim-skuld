@@ -28,7 +28,8 @@ class Skuld(threading.Thread):
 
     QUIT_EVENT_POLL_TIMEOUT = 0.2         # In seconds
 
-    def __init__(self, cmd_queue=None, ret_queue=None, quit_event=None):
+    def __init__(self, adaptor=None, cmd_queue=None,
+                 ret_queue=None, quit_event=None):
         """
         Initialize the Skuld object.
 
@@ -70,6 +71,7 @@ class Skuld(threading.Thread):
         self._cur_state_start_time = None
         self._cur_state = self._state_idle
         self._cur_work_streak = 0
+        self._vim_adaptor = adaptor
 
     def run(self):
         """Main loop."""
@@ -114,8 +116,15 @@ class Skuld(threading.Thread):
         cmd_func = getattr(self, '_cmd_' + cmd.name, self._cmd_default)
         cmd_func(cmd)
 
+    def _reply_cmd(self, cmd, reply):
+        if cmd.block:
+            self._ret_q.put(reply)
+
     def _cmd_default(self, cmd):
         print(self, cmd, file=sys.stderr)
+
+    def _cmd_set_adaptor(self, cmd):
+        self._vim_adaptor = cmd.args
 
     def _cmd_set_work_period(self, cmd):
         self._work_period = cmd.args
@@ -130,7 +139,7 @@ class Skuld(threading.Thread):
         self._tasks = cmd.args
 
     def _cmd_get_tasks(self, cmd):
-        self._ret_q.put(self._tasks)
+        self._reply_cmd(cmd, self._tasks)
 
     def _cmd_start_timer(self, cmd):
         if isinstance(cmd.args, int):
@@ -147,6 +156,12 @@ class Skuld(threading.Thread):
         self._cur_state_start_time = None
         self._cur_state = self._state_idle
         self._cur_work_streak = 0
+
+    def _cmd_timer_enabled(self, cmd):
+        if self._cur_state == self._state_idle:
+            self._reply_cmd(cmd, False)
+        else:
+            self._reply_cmd(cmd, True)
 
     def _state_idle(self):
         return self._state_idle
@@ -209,6 +224,7 @@ class SkuldVimAdaptor(object):
             skuld_obj = Skuld()
             skuld_obj.setDaemon(True)
             skuld_obj.start()
+        skuld_obj.cmd(SkuldCmd(name='set_adaptor', args=self, block=False))
         self._skuld = skuld_obj
 
     #def set_current_range_as_tasks(self):
