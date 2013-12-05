@@ -342,7 +342,10 @@ class SkuldVimAdaptor(object):
         if line.rfind(self.SKULD_TASK_SEPERATOR) >= 0:
             return line
         else:
-            return line.ljust(29) + self.SKULD_TASK_SEPERATOR
+            line_width = vim.strwidth(line)
+            if line_width < 29:
+                line += ' ' * (29 - line_width)
+            return line + self.SKULD_TASK_SEPERATOR
 
 
 def __str_diff_time__(time1, time2):
