@@ -5,12 +5,12 @@ if !exists("v:servername") || v:servername == ''
     finish
 endif
 
-"if exists("g:loaded_skuld") && g:loaded_skuld
-"    finish
-"endif
-"let g:loaded_skuld = 1
-"
-"pyfile <sfile>:h/skuld.py
+if exists("g:loaded_skuld") && g:loaded_skuld
+    finish
+endif
+let g:loaded_skuld = 1
+
+pyfile <sfile>:h/skuld.py
 
 command! -nargs=1 SkuldStartTimer   :py skuld_adaptor.start_timer(int(<args>))
 command! -nargs=0 SkuldStopTimer    :py skuld_adaptor.stop_timer()
