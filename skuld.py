@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 """
 Python thread to manage your tasks in VIM.
 
@@ -163,6 +164,21 @@ class Skuld(threading.Thread):
         else:
             self._reply_cmd(cmd, True)
 
+    def _cmd_get_state(self, cmd):
+        if self._cur_state == self._state_idle:
+            self._reply_cmd(cmd, "Idle")
+        elif self._cur_state == self._state_working:
+            reply = 'Working on task {} - '.format(self._cur_task) \
+                    + __str_diff_time__(time.time(),
+                                        self._cur_state_start_time)
+            self._reply_cmd(cmd, reply)
+        elif self._cur_state == self._state_resting \
+                or self._cur_state == self._state_long_resting:
+            reply = 'Resting - ' \
+                    + __str_diff_time__(time.time(),
+                                        self._cur_state_start_time)
+            self._reply_cmd(cmd, reply)
+
     def _cmd_switch_task(self, cmd):
         if isinstance(cmd.args, int) and cmd.args >= 0 \
            and cmd.args < len(self._tasks):
@@ -306,6 +322,16 @@ class SkuldVimAdaptor(object):
         self._skuld.cmd(SkuldCmd(name='switch_task',
                                  args=task_id, block=False))
 
+    def get_state(self):
+        """
+        Shortcut for accessing the current state of Skuld.
+
+        Return a string description.
+
+        """
+        return self._skuld.cmd(SkuldCmd(name='get_state',
+                                        args=None, block=True))
+
     def _find_skuld_buffer(self):
         for b in vim.buffers:
             if b.name.endswith(self.SKULD_BUFFER_NAME):
@@ -317,6 +343,13 @@ class SkuldVimAdaptor(object):
             return line
         else:
             return line.ljust(29) + self.SKULD_TASK_SEPERATOR
+
+
+def __str_diff_time__(time1, time2):
+    rem_time = int(time1 - time2)
+    rem_min = rem_time // 60
+    rem_sec = rem_time % 60
+    return "{:0>2}:{:0>2}".format(rem_min, rem_sec)
 
 
 def __filter_task_lines__(lines):
