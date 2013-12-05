@@ -11,7 +11,7 @@ import vim
 import threading
 import collections
 import time
-import sys
+import os
 
 try:
     import queue
@@ -62,10 +62,10 @@ class Skuld(threading.Thread):
         self._cmd_q = cmd_queue
         self._ret_q = ret_queue
         self._quit_e = quit_event
-        self._work_period = 0.5
-        self._rest_period = 0.5
-        self._long_rest_period = 1
-        self._max_work_streak = 2
+        self._work_period = 25
+        self._rest_period = 5
+        self._long_rest_period = 15
+        self._max_work_streak = 4
         self._tasks = []
         self._cur_task = -1
         self._cur_state_start_time = None
@@ -121,7 +121,7 @@ class Skuld(threading.Thread):
             self._ret_q.put(reply)
 
     def _cmd_default(self, cmd):
-        print(self, cmd, file=sys.stderr)
+        self._vim_adaptor.remote_notify("Unknown command: " + repr(cmd))
 
     def _cmd_set_adaptor(self, cmd):
         self._vim_adaptor = cmd.args
@@ -147,12 +147,12 @@ class Skuld(threading.Thread):
         else:
             self._cur_task = 0
         if self._cur_task >= 0 and self._cur_task < len(self._tasks):
-            print('_state_idle -> _state_working', file=sys.stderr)
+            self._vim_adaptor.remote_notify('_state_idle -> _state_working')
             self._cur_state_start_time = time.time()
             self._cur_state = self._state_working
 
     def _cmd_stop_timer(self, cmd):
-        print('_state_* -> _state_idle', file=sys.stderr)
+        self._vim_adaptor.remote_notify('_state_* -> _state_idle')
         self._cur_state_start_time = None
         self._cur_state = self._state_idle
         self._cur_work_streak = 0
@@ -163,6 +163,11 @@ class Skuld(threading.Thread):
         else:
             self._reply_cmd(cmd, True)
 
+    def _cmd_switch_task(self, cmd):
+        if isinstance(cmd.args, int) and cmd.args >= 0 \
+           and cmd.args < len(self._tasks):
+            self._cur_task = cmd.args
+
     def _state_idle(self):
         return self._state_idle
 
@@ -171,15 +176,20 @@ class Skuld(threading.Thread):
             now = time.time()
             diff_time = now - self._cur_state_start_time
             if diff_time >= (self._work_period * 60):
-                # TODO: Trigger notification
+                try:
+                    self._tasks[self._cur_task] += '*'
+                except IndexError:
+                    pass
+
                 self._cur_work_streak += 1
                 if self._cur_work_streak < self._max_work_streak:
-                    print('_state_working -> _state_resting', file=sys.stderr)
+                    self._vim_adaptor.remote_notify(
+                        '_state_working -> _state_resting')
                     return self._state_resting
                 else:
                     self._cur_work_streak = 0
-                    print('_state_working -> _state_long_resting',
-                          file=sys.stderr)
+                    self._vim_adaptor.remote_notify(
+                        '_state_working -> _state_long_resting')
                     return self._state_long_resting
             else:
                 return self._state_working
@@ -191,8 +201,8 @@ class Skuld(threading.Thread):
             now = time.time()
             diff_time = now - self._cur_state_start_time
             if diff_time >= (self._rest_period * 60):
-                # TODO: Trigger notification
-                print('_state_resting -> _state_working', file=sys.stderr)
+                self._vim_adaptor.remote_notify(
+                    '_state_resting -> _state_working')
                 return self._state_working
             else:
                 return self._state_resting
@@ -204,8 +214,8 @@ class Skuld(threading.Thread):
             now = time.time()
             diff_time = now - self._cur_state_start_time
             if diff_time >= (self._long_rest_period * 60):
-                # TODO: Trigger notification
-                print('_state_long_resting -> _state_working', file=sys.stderr)
+                self._vim_adaptor.remote_notify(
+                    '_state_long_resting -> _state_working')
                 return self._state_working
             else:
                 return self._state_long_resting
@@ -218,8 +228,15 @@ class SkuldVimAdaptor(object):
     """The Bridge between Skuld and Vim."""
 
     SKULD_BUFFER_NAME = '[Skuld Tasks]'
+    SKULD_TASK_SEPERATOR = ' |'
 
-    def __init__(self, skuld_obj=None):
+    def __init__(self, vim_server=None, skuld_obj=None):
+        if vim_server is None:
+            vim_server = vim.vvars['servername']
+        if len(vim_server) == 0:
+            raise RuntimeError('v:servername not found')
+        self._vim_server_name = vim_server
+
         if skuld_obj is None:
             skuld_obj = Skuld()
             skuld_obj.setDaemon(True)
@@ -227,16 +244,10 @@ class SkuldVimAdaptor(object):
         self._skuld = skuld_obj
         skuld_obj.cmd(SkuldCmd(name='set_adaptor', args=self, block=False))
 
-    #def set_current_range_as_tasks(self):
-    #    """Set the current range as tasks."""
-    #    tasks = __filter_task_lines__(vim.current.range[:])
-    #    self._skuld.cmd(SkuldCmd(name='set_tasks',
-    #                             args=tasks,
-    #                             block=False))
-
     def set_current_buf_as_tasks(self):
         """Set the contents of current buffer as tasks."""
         tasks = __filter_task_lines__(vim.current.buffer[:])
+        tasks = [self._deco_task_line(t) for t in tasks]
         self._skuld.cmd(SkuldCmd(name='set_tasks',
                                  args=tasks,
                                  block=False))
@@ -259,11 +270,53 @@ class SkuldVimAdaptor(object):
     def update_buf_content(self, buf=None):
         """Write tasks to a buffer."""
         if buf is None:
-            buf = vim.current.buffer
-        tasks = self._skuld.cmd(SkuldCmd(name='get_tasks',
-                                         args=[],
-                                         block=True))
-        buf[:] = tasks
+            buf = self._find_skuld_buffer()
+        if buf is not None:
+            tasks = self._skuld.cmd(SkuldCmd(name='get_tasks',
+                                             args=[],
+                                             block=True))
+            buf[:] = tasks
+
+    def remote_notify(self, msg):
+        """Display a message remotely."""
+        cmd = 'gvim --cmd "call remote_send(\'' \
+              + self._vim_server_name \
+              + '\', \'<esc><esc>:echohl WarningMsg | echo \'\'' \
+              + msg + '\'\' | echohl None | call foreground() ' \
+              + '| SkuldBufUpdate<cr>\')" --cmd qa'
+        os.system(cmd)
+
+    def start_timer(self, cur_task):
+        """Shortcut for starting the Skuld timer."""
+        self._skuld.cmd(SkuldCmd(name='start_timer',
+                                 args=cur_task, block=False))
+
+    def stop_timer(self):
+        """Shortcut for stopping the Skuld timer."""
+        self._skuld.cmd(SkuldCmd(name='stop_timer',
+                                 args=None, block=False))
+
+    def timer_enabled(self):
+        """Shortcut for getting the timer state. Return True or False."""
+        return self._skuld.cmd(SkuldCmd(name='timer_enabled',
+                                        args=None, block=True))
+
+    def switch_task(self, task_id):
+        """Shortcut for switching current task."""
+        self._skuld.cmd(SkuldCmd(name='switch_task',
+                                 args=task_id, block=False))
+
+    def _find_skuld_buffer(self):
+        for b in vim.buffers:
+            if b.name.endswith(self.SKULD_BUFFER_NAME):
+                return b
+        return None
+
+    def _deco_task_line(self, line):
+        if line.rfind(self.SKULD_TASK_SEPERATOR) >= 0:
+            return line
+        else:
+            return line.ljust(29) + self.SKULD_TASK_SEPERATOR
 
 
 def __filter_task_lines__(lines):
