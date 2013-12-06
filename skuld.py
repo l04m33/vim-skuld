@@ -281,7 +281,7 @@ class SkuldVimAdaptor(object):
         vim.current.buffer.options['buftype'] = 'nofile'
         vim.current.buffer.options['bufhidden'] = 'hide'
         vim.current.buffer.options['swapfile'] = False
-        vim.command('call SkuldMapBufKeys()')
+        vim.command('call SkuldBufOpenHook()')
 
     def update_buf_content(self, buf=None):
         """Write tasks to a buffer."""
@@ -297,7 +297,7 @@ class SkuldVimAdaptor(object):
         """Display a message remotely."""
         cmd = 'gvim --cmd "call remote_send(\'' \
               + self._vim_server_name \
-              + '\', \'<esc><esc>:echohl WarningMsg | echo \'\'' \
+              + '\', \'<c-\\><c-n>:echohl WarningMsg | echo \'\'' \
               + msg + '\'\' | echohl None | call foreground() ' \
               + '| SkuldBufUpdate<cr>\')" --cmd qa'
         os.system(cmd)

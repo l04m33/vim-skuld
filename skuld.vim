@@ -21,7 +21,22 @@ command! -nargs=0 SkuldBufOpen      :py skuld_adaptor.display_tasks()
 command! -nargs=0 SkuldBufUpdate    :py skuld_adaptor.update_buf_content()
 command! -nargs=0 SkuldTaskUpdate   :py skuld_adaptor.set_current_buf_as_tasks()
 
+" Called in skuld.py
+function! SkuldBufOpenHook()
+    call SkuldMapBufKeys()
+    call SkuldSetBufHilight()
+endfunction
+
 function! SkuldMapBufKeys()
+endfunction
+
+function! SkuldSetBufHilight()
+    syn match skuldSeperator ' |'
+    syn match skuldStar      '\*\+'
+    syn match skuldTask      '^[^ \t|]\+'
+    hi link skuldSeperator Comment
+    hi link skuldStar      Comment
+    hi link skuldTask      Function
 endfunction
 
 augroup SkuldBufAu
@@ -31,3 +46,6 @@ augroup SkuldBufAu
     autocmd InsertLeave \[Skuld\ Tasks\] SkuldTaskUpdate
     autocmd InsertLeave \[Skuld\ Tasks\] SkuldBufUpdate
 augroup end
+
+noremap <leader>sb :SkuldBufOpen<cr>
+noremap <leader>ss :SkuldGetState<cr>
