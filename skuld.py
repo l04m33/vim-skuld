@@ -295,12 +295,19 @@ class SkuldVimAdaptor(object):
 
     def remote_notify(self, msg):
         """Display a message remotely."""
-        cmd = 'gvim --cmd "call remote_send(\'' \
-              + self._vim_server_name \
-              + '\', \'<c-\\><c-n>:echohl WarningMsg | echo \'\'' \
-              + msg + '\'\' | echohl None | call foreground() ' \
-              + '| SkuldBufUpdate<cr>\')" --cmd qa'
-        os.system(cmd)
+        try:
+            notify_cmd = vim.vars['skuld_notify_cmd']
+        except KeyError:
+            notify_cmd = None
+        if notify_cmd is not None and len(notify_cmd) > 0:
+            os.system(notify_cmd + ' ' + __shell_quote__(msg))
+        else:
+            cmd = 'gvim --cmd "call remote_send(\'' \
+                + self._vim_server_name \
+                + '\', \'<c-\\><c-n>:echohl WarningMsg | echo \'\'' \
+                + msg + '\'\' | echohl None | call foreground() ' \
+                + '| SkuldBufUpdate<cr>\')" --cmd qa'
+            os.system(cmd)
 
     def start_timer(self, cur_task):
         """Shortcut for starting the Skuld timer."""
@@ -346,6 +353,10 @@ class SkuldVimAdaptor(object):
             if line_width < 29:
                 line += ' ' * (29 - line_width)
             return line + self.SKULD_TASK_SEPERATOR
+
+
+def __shell_quote__(qstr):
+    return "'" + qstr.replace("'", "'\\''") + "'"
 
 
 def __str_diff_time__(time1, time2):

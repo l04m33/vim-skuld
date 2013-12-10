@@ -22,6 +22,8 @@ function SkuldLoad()
     endif
     let g:loaded_skuld = 1
 
+"    let g:skuld_notify_cmd = "notify-send"
+
     pyfile `=g:skuld_script`
 
     command! -nargs=1 SkuldStartTimer   :py skuld_adaptor.start_timer(int(<args>))
