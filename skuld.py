@@ -19,6 +19,11 @@ try:
 except ImportError:
     import Queue as queue
 
+try:
+    from shlex import quote as shell_quote
+except ImportError:
+    from pipes import quote as shell_quote
+
 
 SkuldCmd = collections.namedtuple('SkuldCmd', ['name', 'args', 'block'])
 
@@ -300,7 +305,7 @@ class SkuldVimAdaptor(object):
         except KeyError:
             notify_cmd = None
         if notify_cmd is not None and len(notify_cmd) > 0:
-            os.system(notify_cmd + ' ' + __shell_quote__(msg))
+            os.system(notify_cmd + ' ' + shell_quote(msg))
         else:
             cmd = 'gvim --cmd "call remote_send(\'' \
                 + self._vim_server_name \
@@ -353,10 +358,6 @@ class SkuldVimAdaptor(object):
             if line_width < 29:
                 line += ' ' * (29 - line_width)
             return line + self.SKULD_TASK_SEPERATOR
-
-
-def __shell_quote__(qstr):
-    return "'" + qstr.replace("'", "'\\''") + "'"
 
 
 def __str_diff_time__(time1, time2):
