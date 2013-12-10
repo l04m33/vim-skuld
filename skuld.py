@@ -307,12 +307,14 @@ class SkuldVimAdaptor(object):
         if notify_cmd is not None and len(notify_cmd) > 0:
             os.system(notify_cmd + ' ' + shell_quote(msg))
         else:
-            cmd = 'gvim --cmd "call remote_send(\'' \
-                + self._vim_server_name \
-                + '\', \'<c-\\><c-n>:echohl WarningMsg | echo \'\'' \
-                + msg + '\'\' | echohl None | call foreground() ' \
-                + '| SkuldBufUpdate<cr>\')" --cmd qa'
-            os.system(cmd)
+            remote_cmd = ("<c-\\><c-n>"
+                          + ":echohl WarningMsg | echo ''{0}'' | echohl None "
+                          + " | call foreground() "
+                          + " | SkuldBufUpdate<cr>").format(msg)
+            vim_cmd = "call remote_send('{0}', '{1}')".format(
+                self._vim_server_name, remote_cmd)
+            sys_cmd = "gvim --cmd {0} --cmd qa".format(shell_quote(vim_cmd))
+            os.system(sys_cmd)
 
     def start_timer(self, cur_task):
         """Shortcut for starting the Skuld timer."""
