@@ -10,6 +10,7 @@ License:    MIT (http://l04m33.mit-license.org)
 from __future__ import print_function
 import vim
 import threading
+import thread
 import collections
 import time
 import os
@@ -32,15 +33,14 @@ class Skuld(threading.Thread):
 
     """The thread object that manages EVERYTHING."""
 
-    QUIT_EVENT_POLL_TIMEOUT = 0.2         # In seconds
+    CMD_POLL_TIMEOUT = 0.2         # In seconds
 
-    def __init__(self, adaptor=None, cmd_queue=None,
-                 ret_queue=None, quit_event=None):
+    def __init__(self, adaptor=None, cmd_queue=None, ret_queue=None):
         """
         Initialize the Skuld object.
 
-        If cmd_queue, ret_queue or quit_event is None, new `queue.Queue` and/or
-        `threading.Event` object(s) will be created.
+        If cmd_queue or ret_queue is None, new `queue.Queue` object(s)
+        will be created.
 
         """
         super(Skuld, self).__init__(name="Skuld")
@@ -59,15 +59,8 @@ class Skuld(threading.Thread):
                                        queue.Queue)
         del dummy_q
 
-        dummy_e = threading.Event()
-        quit_event = __check_arg_type__(quit_event,
-                                        dummy_e.__class__,
-                                        threading.Event)
-        del dummy_e
-
         self._cmd_q = cmd_queue
         self._ret_q = ret_queue
-        self._quit_e = quit_event
         self._work_period = 25
         self._rest_period = 5
         self._long_rest_period = 15
@@ -81,8 +74,9 @@ class Skuld(threading.Thread):
 
     def run(self):
         """Main loop."""
-        while not self._quit_e.wait(self.QUIT_EVENT_POLL_TIMEOUT):
-            cmd = self._recv_cmd()
+        while True:
+            cmd = self._recv_cmd(block=True,
+                                 timeout=self.CMD_POLL_TIMEOUT)
             while cmd is not None:
                 self._handle_cmd(cmd)
                 cmd = self._recv_cmd()
@@ -109,12 +103,12 @@ class Skuld(threading.Thread):
 
     def quit(self):
         """Kill the thread. Must be called by another thread."""
-        self._quit_e.set()
+        self.cmd(SkuldCmd(name='quit', args=None, block=False))
         self.join()
 
-    def _recv_cmd(self):
+    def _recv_cmd(self, block=False, timeout=None):
         try:
-            return self._cmd_q.get(block=False)
+            return self._cmd_q.get(block=block, timeout=timeout)
         except queue.Empty:
             return None
 
@@ -128,6 +122,9 @@ class Skuld(threading.Thread):
 
     def _cmd_default(self, cmd):
         self._vim_adaptor.remote_notify("Unknown command: " + repr(cmd))
+
+    def _cmd_quit(self, cmd):
+        thread.exit()
 
     def _cmd_set_adaptor(self, cmd):
         self._vim_adaptor = cmd.args
