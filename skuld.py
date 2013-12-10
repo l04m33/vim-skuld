@@ -287,7 +287,7 @@ class SkuldVimAdaptor(object):
         """Write tasks to a buffer."""
         if buf is None:
             buf = self._find_skuld_buffer()
-        if buf is not None:
+        if buf is not None and buf.number == vim.current.buffer.number:
             tasks = self._skuld.cmd(SkuldCmd(name='get_tasks',
                                              args=[],
                                              block=True))
