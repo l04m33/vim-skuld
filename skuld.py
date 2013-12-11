@@ -263,13 +263,22 @@ class SkuldVimAdaptor(object):
             skuld_obj = Skuld()
             skuld_obj.setDaemon(True)
             skuld_obj.start()
-            try:
-                progress_sym = vim.vars['skuld_progress_symbol']
-                skuld_obj.cmd(SkuldCmd(name='set_progress_symbol',
-                                       args=progress_sym,
-                                       block=False))
-            except KeyError:
-                pass
+
+            progress_sym = vim.vars.get('skuld_progress_symbol', '*')
+            skuld_obj.cmd(SkuldCmd(name='set_progress_symbol',
+                                   args=progress_sym, block=False))
+
+            work_period = vim.vars.get('skuld_work_period', 25)
+            skuld_obj.cmd(SkuldCmd(name='set_work_period',
+                                   args=work_period, block=False))
+
+            rest_period = vim.vars.get('skuld_rest_period', 5)
+            skuld_obj.cmd(SkuldCmd(name='set_rest_period',
+                                   args=rest_period, block=False))
+
+            long_rest_period = vim.vars.get('skuld_long_rest_period', 15)
+            skuld_obj.cmd(SkuldCmd(name='set_long_rest_period',
+                                   args=long_rest_period, block=False))
 
         self._skuld = skuld_obj
         skuld_obj.cmd(SkuldCmd(name='set_adaptor', args=self, block=False))
