@@ -139,6 +139,9 @@ class Skuld(threading.Thread):
     def _cmd_set_long_rest_period(self, cmd):
         self._long_rest_period = cmd.args
 
+    def _cmd_set_max_work_streak(self, cmd):
+        self._max_work_streak = cmd.args
+
     def _cmd_set_tasks(self, cmd):
         self._tasks = cmd.args
 
@@ -279,6 +282,10 @@ class SkuldVimAdaptor(object):
             long_rest_period = vim.vars.get('skuld_long_rest_period', 15)
             skuld_obj.cmd(SkuldCmd(name='set_long_rest_period',
                                    args=long_rest_period, block=False))
+
+            max_work_streak = vim.vars.get('skuld_max_work_streak', 4)
+            skuld_obj.cmd(SkuldCmd(name='set_max_work_streak',
+                                   args=max_work_streak, block=False))
 
         self._skuld = skuld_obj
         skuld_obj.cmd(SkuldCmd(name='set_adaptor', args=self, block=False))

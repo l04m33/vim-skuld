@@ -27,6 +27,7 @@ function SkuldLoad()
 "    let g:skuld_work_period = 25
 "    let g:skuld_rest_period = 5
 "    let g:skuld_long_rest_period = 15
+"    let g:skuld_max_work_streak = 4
 
     pyfile `=g:skuld_script`
 
