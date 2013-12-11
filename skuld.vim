@@ -23,6 +23,7 @@ function SkuldLoad()
     let g:loaded_skuld = 1
 
 "    let g:skuld_notify_cmd = "notify-send"
+"    let g:skuld_progress_symbol = "✔"
 
     pyfile `=g:skuld_script`
 
@@ -46,10 +47,10 @@ function SkuldLoad()
 
     function! SkuldSetBufHilight()
         syn match skuldSeperator ' |'
-        syn match skuldStar      '\*\+'
+        syn match skuldProgress  '\(?:\|\)[^|]\+$'
         syn match skuldTask      '^[^ \t|]\+'
         hi link skuldSeperator Comment
-        hi link skuldStar      Comment
+        hi link skuldProgress  Comment
         hi link skuldTask      Function
     endfunction
 

@@ -67,6 +67,7 @@ class Skuld(threading.Thread):
         self._max_work_streak = 4
         self._tasks = []
         self._cur_task = -1
+        self._progress_symbol = '*'
         self._cur_state_start_time = None
         self._cur_state = self._state_idle
         self._cur_work_streak = 0
@@ -144,6 +145,9 @@ class Skuld(threading.Thread):
     def _cmd_get_tasks(self, cmd):
         self._reply_cmd(cmd, self._tasks)
 
+    def _cmd_set_progress_symbol(self, cmd):
+        self._progress_symbol = cmd.args
+
     def _cmd_start_timer(self, cmd):
         if isinstance(cmd.args, int):
             self._cur_task = cmd.args
@@ -195,7 +199,7 @@ class Skuld(threading.Thread):
             diff_time = now - self._cur_state_start_time
             if diff_time >= (self._work_period * 60):
                 try:
-                    self._tasks[self._cur_task] += '*'
+                    self._tasks[self._cur_task] += self._progress_symbol
                 except IndexError:
                     pass
 
@@ -259,6 +263,14 @@ class SkuldVimAdaptor(object):
             skuld_obj = Skuld()
             skuld_obj.setDaemon(True)
             skuld_obj.start()
+            try:
+                progress_sym = vim.vars['skuld_progress_symbol']
+                skuld_obj.cmd(SkuldCmd(name='set_progress_symbol',
+                                       args=progress_sym,
+                                       block=False))
+            except KeyError:
+                pass
+
         self._skuld = skuld_obj
         skuld_obj.cmd(SkuldCmd(name='set_adaptor', args=self, block=False))
 
