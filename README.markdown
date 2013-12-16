@@ -26,7 +26,7 @@ After a successful installation, these commands are available:
 
 `SkuldBufOpen` is mapped to `<leader>sb` by default. You can open a scratch
 buffer called `[Skuld Tasks]` using this command, and then write down your
-tasks in that buffer, on task per line. Whenever you leave insert mode, or
+tasks in that buffer, one task per line. Whenever you leave insert mode, or
 leave the `[Skuld Tasks]` buffer, your tasks will be set automatically.
 
 Once the tasks are set, you can invoke `SkuldStartTimer 0` to start the
