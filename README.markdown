@@ -75,3 +75,11 @@ These variables can be set in you `.vimrc` to override the defaults:
     " Notification command
     let g:skuld_notify_cmd = 'notify-send'
 ```
+
+License
+=======
+
+This Vim plugin is licensed under the terms of [the MIT license][2].
+
+[2]: http://l04m33.mit-license.org/
+
