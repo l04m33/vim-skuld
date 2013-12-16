@@ -39,6 +39,10 @@ the change of timer state. You can start working or have a break
 accordingly. Skuld will append a pomodoro completion symbol, which defaults
 to `*`, after the current task, when a working period ends.
 
+You can edit `[Skuld Tasks]` buffer while the timer is running. Edited
+tasks will be synchronized automatically once you leave insert mode or
+leave the buffer.
+
 Mappings
 ========
 
