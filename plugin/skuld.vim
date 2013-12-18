@@ -8,7 +8,7 @@ augroup SkuldAu
     autocmd VimEnter * SkuldLoad
 augroup end
 
-function SkuldLoad()
+function! SkuldLoad()
 
     if !exists("v:servername") || v:servername == ''
         echohl WarningMsg
