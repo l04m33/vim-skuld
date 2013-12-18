@@ -51,7 +51,7 @@ function! SkuldLoad()
     function! SkuldSetBufHilight()
         syn match skuldSeperator ' |'
         syn match skuldProgress  '\(?:\|\)[^|]\+$'
-        syn match skuldTask      '^[^ \t|]\+'
+        syn match skuldTask      '^[^|]\+'
         hi link skuldSeperator Comment
         hi link skuldProgress  Comment
         hi link skuldTask      Function
