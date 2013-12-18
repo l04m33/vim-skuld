@@ -4,7 +4,7 @@ Introduction
 Skuld is a [pomodoro timer][1] that runs inside Vim. It can help you track
 your tasks in an simple (or stupid) way.
 
-Please send pull request to https://github.com/l04m33/vim-skuld
+Please send pull requests to https://github.com/l04m33/vim-skuld
 
 [1]: http://en.wikipedia.org/wiki/Pomodoro_technique
 
@@ -17,7 +17,7 @@ Nothing else is needed.
 Installation
 ============
 
-[Vundle][2] is recommended
+[Vundle][2] is recommended.
 
 [2]: https://github.com/gmarik/vundle
 
