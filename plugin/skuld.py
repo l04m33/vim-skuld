@@ -435,11 +435,11 @@ def skuld_closure():
 
     # ================== main routine ==================
 
-    if __name__ == '__main__':
-        global skuld_adaptor
-        skuld_adaptor = SkuldVimAdaptor()
+    global skuld_adaptor
+    skuld_adaptor = SkuldVimAdaptor()
 
 
-skuld_adaptor = None
-skuld_closure()
-del skuld_closure
+if __name__ == '__main__':
+    skuld_adaptor = None
+    skuld_closure()
+    del skuld_closure
