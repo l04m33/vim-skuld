@@ -75,6 +75,7 @@ def skuld_closure():
             self._tasks = []
             self._cur_task = -1
             self._progress_symbol = '*'
+            self._squash_symbol = 'x'
             self._cur_state_start_time = None
             self._cur_state = self._state_idle
             self._cur_work_streak = 0
@@ -158,6 +159,9 @@ def skuld_closure():
         def _cmd_set_progress_symbol(self, cmd):
             self._progress_symbol = cmd.args
 
+        def _cmd_set_squash_symbol(self, cmd):
+            self._squash_symbol = cmd.args
+
         def _cmd_start_timer(self, cmd):
             if isinstance(cmd.args, int):
                 self._cur_task = cmd.args
@@ -170,6 +174,8 @@ def skuld_closure():
                 self._cur_state = self._state_working
 
         def _cmd_stop_timer(self, cmd):
+            if self._cur_state == self._state_working:
+                self._tasks[self._cur_task] += self._squash_symbol
             self._vim_adaptor.remote_notify('_state_* -> _state_idle')
             self._cur_state_start_time = None
             self._cur_state = self._state_idle
@@ -277,6 +283,10 @@ def skuld_closure():
                 progress_sym = vim.vars.get('skuld_progress_symbol', '*')
                 skuld_obj.cmd(SkuldCmd(name='set_progress_symbol',
                                        args=progress_sym, block=False))
+
+                squash_sym = vim.vars.get('skuld_squash_symbol', 'x')
+                skuld_obj.cmd(SkuldCmd(name='set_squash_symbol',
+                                       args=squash_sym, block=False))
 
                 work_period = vim.vars.get('skuld_work_period', 25)
                 skuld_obj.cmd(SkuldCmd(name='set_work_period',

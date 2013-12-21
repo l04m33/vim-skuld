@@ -71,6 +71,9 @@ These variables can be set in you `.vimrc` to override the defaults:
     " Pomodoro completion symbol
     let g:skuld_progress_symbol = '*'
 
+    " Pomodoro squashed symbol
+    let g:skuld_squash_symbol = 'x'
+
     " Pomodoro working period (in minutes)
     let g:skuld_work_period = 25
 

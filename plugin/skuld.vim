@@ -24,6 +24,7 @@ function! SkuldLoad()
 
 "    let g:skuld_notify_cmd = "notify-send"
 "    let g:skuld_progress_symbol = "✔"
+"    let g:skuld_squash_symbol = "✗"
 "    let g:skuld_work_period = 25
 "    let g:skuld_rest_period = 5
 "    let g:skuld_long_rest_period = 15
