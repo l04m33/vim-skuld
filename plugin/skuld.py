@@ -169,14 +169,14 @@ def skuld_closure():
                 self._cur_task = 0
             if self._cur_task >= 0 and self._cur_task < len(self._tasks):
                 self._vim_adaptor.remote_notify(
-                    '_state_idle -> _state_working')
+                    'Skuld: Idle -> Working')
                 self._cur_state_start_time = time.time()
                 self._cur_state = self._state_working
 
         def _cmd_stop_timer(self, cmd):
             if self._cur_state == self._state_working:
                 self._tasks[self._cur_task] += self._squash_symbol
-            self._vim_adaptor.remote_notify('_state_* -> _state_idle')
+            self._vim_adaptor.remote_notify('Skuld: * -> Idle')
             self._cur_state_start_time = None
             self._cur_state = self._state_idle
             self._cur_work_streak = 0
@@ -223,12 +223,12 @@ def skuld_closure():
                     self._cur_work_streak += 1
                     if self._cur_work_streak < self._max_work_streak:
                         self._vim_adaptor.remote_notify(
-                            '_state_working -> _state_resting')
+                            'Skuld: Working -> Resting')
                         return self._state_resting
                     else:
                         self._cur_work_streak = 0
                         self._vim_adaptor.remote_notify(
-                            '_state_working -> _state_long_resting')
+                            'Skuld: Working -> Long Resting')
                         return self._state_long_resting
                 else:
                     return self._state_working
@@ -241,7 +241,7 @@ def skuld_closure():
                 diff_time = now - self._cur_state_start_time
                 if diff_time >= (self._rest_period * 60):
                     self._vim_adaptor.remote_notify(
-                        '_state_resting -> _state_working')
+                        'Skuld: Resting -> Working')
                     return self._state_working
                 else:
                     return self._state_resting
@@ -254,7 +254,7 @@ def skuld_closure():
                 diff_time = now - self._cur_state_start_time
                 if diff_time >= (self._long_rest_period * 60):
                     self._vim_adaptor.remote_notify(
-                        '_state_long_resting -> _state_working')
+                        'Skuld: Long Resting -> Working')
                     return self._state_working
                 else:
                     return self._state_long_resting
