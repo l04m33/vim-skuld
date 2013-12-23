@@ -48,7 +48,7 @@ function! SkuldLoad()
     endfunction
 
     function! SkuldMapBufKeys()
-        nnoremap <leader>r :execute "SkuldStartTask ".(line('.') - 1)
+        nnoremap <leader>r :execute "SkuldStartTask ".(line('.') - 1)<cr>
     endfunction
 
     function! SkuldSetBufHilight()
