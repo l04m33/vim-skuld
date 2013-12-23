@@ -45,10 +45,11 @@ function! SkuldLoad()
     function! SkuldBufOpenHook()
         call SkuldMapBufKeys()
         call SkuldSetBufHilight()
+        call SkuldSigns()
     endfunction
 
     function! SkuldMapBufKeys()
-        nnoremap <leader>r :execute "SkuldStartTask ".(line('.') - 1)<cr>
+        nnoremap <buffer> <cr> :execute "SkuldStartTask ".(line(".") - 1) \| SkuldGetState<cr>
     endfunction
 
     function! SkuldSetBufHilight()
@@ -60,6 +61,10 @@ function! SkuldLoad()
         hi link skuldTask      Function
     endfunction
 
+    function! SkuldSigns()
+        sign define SkuldCurrentTask text=> texthl=Comment
+    endfunction
+
     augroup SkuldBufAu
         autocmd!
         autocmd BufEnter    \[Skuld\ Tasks\] SkuldBufUpdate
@@ -68,7 +73,7 @@ function! SkuldLoad()
         autocmd InsertLeave \[Skuld\ Tasks\] SkuldBufUpdate
     augroup end
 
-    noremap <leader>sb :SkuldBufOpen<cr>
-    noremap <leader>ss :SkuldGetState<cr>
+    nnoremap <leader>sb :SkuldBufOpen<cr>
+    nnoremap <leader>ss :SkuldGetState<cr>
 
 endfunction
