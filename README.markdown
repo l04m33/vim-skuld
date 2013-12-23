@@ -30,6 +30,7 @@ After a successful installation, these commands are available:
 
 - `SkuldStartTimer <task_id>`   : Start the pomodoro timer
 - `SkuldStopTimer`              : Stop the pomodoro timer
+- `SkuldStartTask <task_id>`    : Switch current task. The timer will be started if it's stopped
 - `SkuldSwitchTask <task_id>`   : Switch current task
 - `SkuldGetState`               : Display current timer state
 - `SkuldBufOpen`                : Open the buffer containing the task list (`[Skuld Tasks]`)
@@ -39,16 +40,19 @@ After a successful installation, these commands are available:
 buffer called `[Skuld Tasks]` using this command, and then write down your
 tasks in that buffer, **one task per line**. Whenever you leave insert mode,
 or leave the `[Skuld Tasks]` buffer, your tasks will be set automatically.
+Each task will be assigned an ID. The IDs start from **zero**.
 
-Once the tasks are set, you can invoke `SkuldStartTimer 0` to start the
-timer, indicating that you will be working on the first task. As you may
-have noticed, Task IDs start from zero. And you don't need to keep the 
-`[Skuld Tasks]` buffer open.
+Once the tasks are set, you can press `<cr>` on a task to start the timer.
+You don't need to keep the `[Skuld Tasks]` buffer open while the timer is
+running.
 
 When the pomodoro timer times out, there will be a Vim message signifying
 the change of timer state. You can start working or have a break
 accordingly. Skuld will append a pomodoro completion symbol, which defaults
 to `*`, after the current task, when a working period ends.
+
+If you invoked `SkuldStopTimer` during a working period, a squash symbol,
+which defaults to `x`, will be appended instead.
 
 You can edit `[Skuld Tasks]` buffer while the timer is running. Edited
 tasks will be synchronized automatically once you leave insert mode or
