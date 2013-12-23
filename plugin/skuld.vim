@@ -34,6 +34,7 @@ function! SkuldLoad()
 
     command! -nargs=1 SkuldStartTimer   :py skuld_adaptor.start_timer(int(<args>))
     command! -nargs=0 SkuldStopTimer    :py skuld_adaptor.stop_timer()
+    command! -nargs=1 SkuldStartTask    :py skuld_adaptor.start_task(int(<args>))
     command! -nargs=1 SkuldSwitchTask   :py skuld_adaptor.switch_task(int(<args>))
     command! -nargs=0 SkuldGetState     :py print(skuld_adaptor.get_state())
     command! -nargs=0 SkuldBufOpen      :py skuld_adaptor.display_tasks()
@@ -47,6 +48,7 @@ function! SkuldLoad()
     endfunction
 
     function! SkuldMapBufKeys()
+        nnoremap <leader>r :execute "SkuldStartTask ".(line('.') - 1)
     endfunction
 
     function! SkuldSetBufHilight()

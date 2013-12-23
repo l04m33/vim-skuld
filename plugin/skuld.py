@@ -380,6 +380,15 @@ def skuld_closure():
             self._skuld.cmd(SkuldCmd(name='switch_task',
                                      args=task_id, block=False))
 
+        def start_task(self, task_id):
+            """Shortcut for starting a task right away."""
+            if self.timer_enabled():
+                self._skuld.cmd(SkuldCmd(name='set_task',
+                                         args=task_id, block=False))
+            else:
+                self._skuld.cmd(SkuldCmd(name='start_timer',
+                                         args=task_id, block=False))
+
         def get_state(self):
             """
             Shortcut for accessing the current state of Skuld.
