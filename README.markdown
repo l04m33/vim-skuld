@@ -62,8 +62,8 @@ Mappings
 ========
 
 ```VimL
-    noremap <leader>sb :SkuldBufOpen<cr>
-    noremap <leader>ss :SkuldGetState<cr>
+    nnoremap <leader>sb :SkuldBufOpen<cr>
+    nnoremap <leader>ss :SkuldGetState<cr>
 ```
 
 Settings
@@ -92,6 +92,15 @@ These variables can be set in you `.vimrc` to override the defaults:
 
     " Notification command
     let g:skuld_notify_cmd = 'notify-send'
+
+    " Mapping for opening the task buffer
+    let g:skuld_buffer_map = '<leader>sb'
+
+    " Mapping for displaying the current state
+    let g:skuld_state_map = '<leader>ss'
+
+    " Default line width for the task buffer
+    let g:skuld_line_width = 29
 ```
 
 License
