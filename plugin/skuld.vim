@@ -34,6 +34,7 @@ function! SkuldLoad()
 
     command! -nargs=1 SkuldStartTimer   :py skuld_adaptor.start_timer(int(<args>))
     command! -nargs=0 SkuldStopTimer    :py skuld_adaptor.stop_timer()
+    command! -nargs=1 SkuldStartTask    :py skuld_adaptor.start_task(int(<args>))
     command! -nargs=1 SkuldSwitchTask   :py skuld_adaptor.switch_task(int(<args>))
     command! -nargs=0 SkuldGetState     :py print(skuld_adaptor.get_state())
     command! -nargs=0 SkuldBufOpen      :py skuld_adaptor.display_tasks()
@@ -44,9 +45,11 @@ function! SkuldLoad()
     function! SkuldBufOpenHook()
         call SkuldMapBufKeys()
         call SkuldSetBufHilight()
+        call SkuldSigns()
     endfunction
 
     function! SkuldMapBufKeys()
+        nnoremap <buffer> <cr> :execute "SkuldStartTask ".(line(".") - 1) \| SkuldGetState<cr>
     endfunction
 
     function! SkuldSetBufHilight()
@@ -56,6 +59,10 @@ function! SkuldLoad()
         hi link skuldSeperator Comment
         hi link skuldProgress  Comment
         hi link skuldTask      Function
+    endfunction
+
+    function! SkuldSigns()
+        sign define SkuldCurrentTask text=> texthl=Comment
     endfunction
 
     augroup SkuldBufAu
@@ -69,10 +76,10 @@ function! SkuldLoad()
     if !exists("g:skuld_buffer_map")
         let g:skuld_buffer_map = '<leader>sb'
     endif
-    execute 'noremap '.g:skuld_buffer_map.' :SkuldBufOpen<cr>'
+    execute 'nnoremap '.g:skuld_buffer_map.' :SkuldBufOpen<cr>'
     if !exists("g:skuld_state_map")
         let g:skuld_state_map = '<leader>ss'
     endif
-    execute 'noremap '.g:skuld_state_map.' :SkuldGetState<cr>'
+    execute 'nnoremap '.g:skuld_state_map.' :SkuldGetState<cr>'
 
 endfunction

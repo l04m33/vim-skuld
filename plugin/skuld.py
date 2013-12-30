@@ -156,6 +156,9 @@ def skuld_closure():
         def _cmd_get_tasks(self, cmd):
             self._reply_cmd(cmd, self._tasks)
 
+        def _cmd_get_cur_task(self, cmd):
+            self._reply_cmd(cmd, self._cur_task)
+
         def _cmd_set_progress_symbol(self, cmd):
             self._progress_symbol = cmd.args
 
@@ -339,7 +342,14 @@ def skuld_closure():
                 tasks = self._skuld.cmd(SkuldCmd(name='get_tasks',
                                                  args=[],
                                                  block=True))
+                cur_task = self._skuld.cmd(SkuldCmd(name='get_cur_task',
+                                                    args=[], block=True))
                 buf[:] = tasks
+                vim.command('sign unplace 1')
+                if cur_task >= 0 and cur_task < len(tasks):
+                    vim.command(
+                        'sign place 1 line={} name=SkuldCurrentTask buffer={}'
+                        .format(cur_task + 1, buf.number))
 
         def remote_notify(self, msg):
             """Display a message remotely."""
@@ -379,6 +389,16 @@ def skuld_closure():
             """Shortcut for switching current task."""
             self._skuld.cmd(SkuldCmd(name='switch_task',
                                      args=task_id, block=False))
+
+        def start_task(self, task_id):
+            """Shortcut for starting a task right away."""
+            if self.timer_enabled():
+                self._skuld.cmd(SkuldCmd(name='switch_task',
+                                         args=task_id, block=False))
+                self.update_buf_content()
+            else:
+                self._skuld.cmd(SkuldCmd(name='start_timer',
+                                         args=task_id, block=False))
 
         def get_state(self):
             """
