@@ -400,9 +400,10 @@ def skuld_closure():
             if line.rfind(self.SKULD_TASK_SEPERATOR) >= 0:
                 return line
             else:
+                set_line_width = vim.vars.get('skuld_line_width', 29)
                 line_width = vim.strwidth(line)
-                if line_width < 29:
-                    line += ' ' * (29 - line_width)
+                if line_width < set_line_width:
+                    line += ' ' * (set_line_width - line_width)
                 return line + self.SKULD_TASK_SEPERATOR
 
     # ================== helper functions ==================

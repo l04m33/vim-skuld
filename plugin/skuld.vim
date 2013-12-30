@@ -66,7 +66,13 @@ function! SkuldLoad()
         autocmd InsertLeave \[Skuld\ Tasks\] SkuldBufUpdate
     augroup end
 
-    noremap <leader>sb :SkuldBufOpen<cr>
-    noremap <leader>ss :SkuldGetState<cr>
+    if !exists("g:skuld_buffer_map")
+        let g:skuld_buffer_map = '<leader>sb'
+    endif
+    execute 'noremap '.g:skuld_buffer_map.' :SkuldBufOpen<cr>'
+    if !exists("g:skuld_state_map")
+        let g:skuld_state_map = '<leader>ss'
+    endif
+    execute 'noremap '.g:skuld_state_map.' :SkuldGetState<cr>'
 
 endfunction
